@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GestãoPro</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/icon.png') }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body.login-body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #f0f2f5;
+        }
+
+        .faixa {
+            background-color: #1a3a6b;
+            height: 54px;
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        .login-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 16px 20px;
+        }
+
+        .login-logo {
+            width: 240px;
+            margin-bottom: 24px;
+        }
+
+        .login-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            padding: 36px 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-card .form-control {
+            border-radius: 8px;
+            border: 1px solid #d0d5dd;
+            padding: 10px 14px;
+        }
+
+        .login-card .form-control:focus {
+            border-color: #1a3a6b;
+            box-shadow: 0 0 0 3px rgba(26,58,107,0.12);
+        }
+
+        .btn-entrar {
+            background-color: #1a3a6b;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            padding: 12px;
+            width: 100%;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .btn-entrar:hover {
+            background-color: #122d56;
+            color: #fff;
+        }
+
+        .faixa-bottom {
+            background-color: #1a3a6b;
+            height: 54px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .login-copyright {
+            color: #fff;
+            font-size: 0.78rem;
+        }
+
+        .login-version {
+            position: absolute;
+            right: 20px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.72rem;
+        }
+    </style>
+</head>
+
+<body class="login-body">
+
+    <div class="faixa"></div>
+
+    <div class="login-main">
+
+        <img src="{{ url_for('static', filename='img/logologin.png') }}" alt="GestãoPro" class="login-logo">
+
+        <div class="login-card">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} mb-3">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Usuário</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold">Senha</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn-entrar">Entrar no Sistema</button>
+            </form>
+
+        </div>
+
+    </div>
+
+    <div class="faixa-bottom">
+        <span class="login-copyright">© 2026 GestãoPro. Todos os direitos reservados.</span>
+        <span class="login-version">v2026.1.2</span>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,5 @@
+Flask
+firebase-admin
+Flask-Session
+werkzeug
+gunicorn

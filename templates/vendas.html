@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendas - GestãoPro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5">
+        <div class="container">
+            <!-- Logo -->
+            <a class="navbar-brand fw-bold" href="/dashboard">🚀 GestãoPro</a>
+
+            <!-- Botão Hamburguer (Só aparece no celular) -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Links do Menu -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto gap-2 mt-3 mt-lg-0">
+                    <a class="nav-link px-3" href="/dashboard">Home</a>
+                    <a class="nav-link px-3" href="/clientes">Clientes</a>
+                    <a class="nav-link px-3" href="/estoque">Estoque</a>
+                    <a class="nav-link px-3" href="/vendas">Vendas</a>
+                    <a class="nav-link px-3" href="/financeiro">Financeiro</a>
+                    <a class="nav-link px-3" href="/parametros">Parâmetros</a>
+                    <hr class="d-lg-none text-white-50"> <!-- Linha divisória apenas no celular -->
+                    <a class="nav-link px-3 text-danger" href="/logout">
+                        <i class="bi bi-box-arrow-right"></i> Sair
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-4 fw-bold">📋 Pedidos de Venda</h2>
+        <div class="table-responsive">
+            <table class="table table-hover bg-white mb-0" id="tabelaVendas">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0, 'tabelaVendas')">Pedido # <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th onclick="sortTable(1, 'tabelaVendas')">Cliente <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th onclick="sortTable(2, 'tabelaVendas')">Emissão <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th onclick="sortTable(3, 'tabelaVendas')">Total <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th class="text-center" onclick="sortTable(4, 'tabelaVendas')">Status <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vendas %}
+                    <tr class="{{ 'text-decoration-line-through opacity-50' if v.status == 'cancelado' else '' }}">
+                        <td><strong>#{{ v.numero_pedido }}</strong></td>
+                        <td>{{ v.cliente }}</td>
+                        <td>{{ v.data_emissao | formato_br }}</td>
+                        <td>R$ {{ "%.2f"|format(v.total_geral) }}</td>
+                        <td class="text-center">
+                            {% if v.status == 'pago' %}
+                            <span
+                                class="badge rounded-pill bg-success-subtle text-success border border-success-subtle p-2 px-3"><i
+                                    class="bi bi-check-circle-fill me-1"></i> PAGO</span>
+                            {% elif v.status == 'vencido' %}
+                            <span
+                                class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle p-2 px-3"><i
+                                    class="bi bi-exclamation-triangle-fill me-1"></i> VENCIDO</span>
+                            {% elif v.status == 'cancelado' %}
+                            <span
+                                class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle p-2 px-3"><i
+                                    class="bi bi-x-circle-fill me-1"></i> CANCELADO</span>
+                            {% else %}
+                            <span
+                                class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle p-2 px-3"><i
+                                    class="bi bi-clock-history me-1"></i> ABERTO</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if v.status == 'cancelado' %}{% elif v.status == 'pago' %}
+                            <button class="btn btn-sm btn-outline-secondary" onclick="abrirVenda('{{ v.id }}', true)"><i
+                                    class="bi bi-eye-fill"></i></button>
+                            {% else %}
+                            <div class="d-flex gap-1 justify-content-center">
+                                <button class="btn btn-sm btn-outline-primary"
+                                    onclick="abrirVenda('{{ v.id }}', false)"><i class="bi bi-pencil-fill"></i></button>
+                                <!-- Procure o botão de pagar e substitua por este: -->
+                                <a href="{{ url_for('pagar_venda', id=v.id) }}" class="btn btn-sm btn-success"
+                                    onclick="return confirm('Confirmar recebimento?')" title="Confirmar Pagamento">
+                                    <i class="bi bi-check-lg"></i>
+                                </a>
+                                <a href="/cancelar_venda/{{ v.id }}" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Cancelar pedido?')"><i class="bi bi-trash-fill"></i></a>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <button class="fab fab-vendas" onclick="novoPedido()"><i class="bi bi-cart-plus-fill"></i></button>
+
+    <!-- Modal Pedido -->
+    <div class="modal fade" id="modalPedido" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content shadow">
+                <form method="POST" id="formVenda">
+                    <div class="modal-header border-0 pb-0" id="modalHeader">
+                        <h5 class="modal-title fw-bold" id="modalTitulo">Novo Pedido</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8"><label class="form-label small fw-bold">Cliente</label>
+                                <select name="cliente" id="campo_cliente" class="form-select" required>
+                                    <option value="" selected disabled>Selecione...</option>
+                                    {% for c in clientes %}<option value="{{ c.nome }}">{{ c.nome }}</option>{% endfor
+                                    %}
+                                </select>
+                            </div>
+                            <div class="col-md-4"><label class="form-label small fw-bold">Emissão</label><input
+                                    type="date" name="data_emissao" id="campo_emissao" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive mb-3">
+                            <table class="table table-bordered align-middle" style="min-width: 800px;">
+                                <!-- Força a tabela a manter uma estrutura legível -->
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 180px; min-width: 180px;">SKU</th>
+                                        <th style="min-width: 200px;">Produto</th>
+                                        <th style="width: 80px; min-width: 80px;">Qtd</th>
+                                        <th style="width: 130px; min-width: 130px;">Valor</th>
+                                        <th style="width: 100px; min-width: 100px;">Desc%</th>
+                                        <th style="width: 130px; min-width: 130px;">Subtotal</th>
+                                        <th style="width: 50px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="grid_itens"></tbody>
+                            </table>
+                        </div>
+                        <button type="button" id="btnNovaLinha" class="btn btn-sm btn-outline-primary mb-4"
+                            onclick="adicionarLinhaVazia()"><i class="bi bi-plus-lg"></i> Nova Linha</button>
+
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="small fw-bold">Vencimento</label>
+                                <div class="input-group">
+                                    <input type="date" name="data_vencimento" id="campo_vencimento" class="form-control" required>
+                                    <!-- Botão Faturamento discreto -->
+                                    <div class="dropdown">
+                                        <button type="button" class="btn btn-outline-secondary px-2"
+                                            id="btnFaturamento"
+                                            data-bs-toggle="dropdown"
+                                            title="Faturamento — intervalo entre parcelas"
+                                            style="border-radius:0 0.375rem 0.375rem 0; font-size:0.85rem;">
+                                            <i class="bi bi-calendar2-range"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width:130px;">
+                                            <li><h6 class="dropdown-header small text-muted">Intervalo</h6></li>
+                                            <li><a class="dropdown-item small" href="#" onclick="setarFaturamento(7)">7 Dias</a></li>
+                                            <li><a class="dropdown-item small" href="#" onclick="setarFaturamento(15)">15 Dias</a></li>
+                                            <li><a class="dropdown-item small" href="#" onclick="setarFaturamento(30)">30 Dias</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div id="label_faturamento" class="form-text text-muted" style="display:none;"></div>
+                            </div>
+                            <div class="col-md-2"><label class="small fw-bold">Parcelas</label><input type="number"
+                                    name="parcelas" id="campo_parcelas" class="form-control" value="1" min="1"></div>
+                            <div class="col-md-3"><label class="small fw-bold">Pagamento</label>
+                                <select name="forma_pagamento" id="campo_forma" class="form-select">
+                                    <option value="PIX">PIX</option>
+                                    <option value="Dinheiro">Dinheiro</option>
+                                    <option value="Cartão">Cartão</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2"><label class="small fw-bold">Desc. Global %</label><input
+                                    type="number" step="0.1" name="desconto_total" id="desc_total_pedido"
+                                    class="form-control" value="0" onchange="renderizarTabelaVendas()"></div>
+                            <div class="col-md-2" id="bloco_data_pagamento" style="display:none;">
+                                <label class="small fw-bold text-success">Pago em</label>
+                                <input type="date" id="campo_data_pagamento"
+                                    class="form-control border-success text-success" readonly>
+                            </div>
+                            <div class="col-12 mt-3"><label class="small fw-bold">Observações</label><textarea
+                                    name="observacao" id="campo_obs" class="form-control" rows="2"></textarea></div>
+                        </div>
+
+                        <div class="bg-light p-3 border rounded-4 text-end mt-4">
+                            <h3 class="mb-0 fw-bold">Total: <span id="total_display" class="text-success">R$ 0,00</span>
+                            </h3>
+                            <input type="hidden" name="total_geral_input" id="total_geral_input" value="0">
+                            <input type="hidden" name="itens_venda" id="itens_venda_json">
+                            <input type="hidden" name="intervalo_parcelas" id="campo_intervalo_parcelas" value="30">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0"><button type="submit" id="btnFinalizar"
+                            class="btn btn-success btn-lg w-100 py-3">Finalizar Pedido</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Busca -->
+    <div class="modal fade" id="modalBuscaProduto" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content shadow">
+                <div class="modal-header">
+                    <h5 class="fw-bold">Pesquisar Produto</h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="inputBuscaFiltro" class="form-control mb-3" placeholder="Filtrar..."
+                        onkeyup="filtrarBuscaVendas()">
+                    <div style="max-height: 350px; overflow-y: auto;">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Produto</th>
+                                    <th>Preço</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista_busca_corpo">
+                                {% for p in produtos %}<tr class="item-busca">
+                                    <td>{{ p.sku }}</td>
+                                    <td>{{ p.nome }}</td>
+                                    <td>R$ {{ p.preco }}</td>
+                                    <td><button class="btn btn-sm btn-primary"
+                                            onclick="selecionarDaBusca('{{ p.sku }}')">Selecionar</button></td>
+                                </tr>{% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- PASSO CRUCIAL: Definir as variáveis ANTES do script externo -->
+    <script>
+        const produtosBase = {{ produtos| tojson }};
+        const vendasBase = {{ vendas| tojson }};
+    </script>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}?v=1.5"></script>
+
+    <script>
+        // ---- FATURAMENTO ----
+        let _intervaloDias = null;
+
+        function setarFaturamento(dias) {
+            _intervaloDias = dias;
+            document.getElementById('campo_intervalo_parcelas').value = dias;
+            const label = document.getElementById('label_faturamento');
+            label.textContent = `↻ A cada ${dias} dias`;
+            label.style.display = 'block';
+        }
+
+        // Ao fechar o modal, reset intervalo
+        document.getElementById('modalPedido').addEventListener('hidden.bs.modal', () => {
+            _intervaloDias = null;
+            const label = document.getElementById('label_faturamento');
+            if (label) { label.style.display = 'none'; label.textContent = ''; }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque - GestãoPro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        #sugestoes-nome {
+            position: absolute;
+            z-index: 9999;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+        }
+
+        #sugestoes-nome .sug-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        #sugestoes-nome .sug-item:hover {
+            background: #f0f4ff;
+        }
+
+        .nome-wrapper {
+            position: relative;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/dashboard">🚀 GestãoPro</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto gap-2 mt-3 mt-lg-0">
+                    <a class="nav-link px-3" href="/dashboard">Home</a>
+                    <a class="nav-link px-3" href="/clientes">Clientes</a>
+                    <a class="nav-link px-3" href="/estoque">Estoque</a>
+                    <a class="nav-link px-3" href="/vendas">Vendas</a>
+                    <a class="nav-link px-3" href="/financeiro">Financeiro</a>
+                    <a class="nav-link px-3" href="/parametros">Parâmetros</a>
+                    <hr class="d-lg-none text-white-50">
+                    <a class="nav-link px-3 text-danger" href="/logout">
+                        <i class="bi bi-box-arrow-right"></i> Sair
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-4 fw-bold">📦 Controle de Estoque</h2>
+
+        <div class="filter-bar shadow-sm">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Pesquisar Produto</label>
+                    <input type="text" id="filterNome" class="form-control" placeholder="Digite o nome..."
+                        onkeyup="aplicarFiltrosEstoque()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Marca</label>
+                    <select id="filterMarca" class="form-select" onchange="aplicarFiltrosEstoque()">
+                        <option value="">Todas</option>
+                        {% for m in marcas %}
+                        <option value="{{ m.nome }}">{{ m.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Linha</label>
+                    <input type="text" id="filterLinha" class="form-control" placeholder="Ex: Ekos..."
+                        onkeyup="aplicarFiltrosEstoque()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">SKU</label>
+                    <input type="text" id="filterSKU" class="form-control" placeholder="Ex: SKU001..."
+                        onkeyup="aplicarFiltrosEstoque()">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="limparFiltrosEstoque()">Limpar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <small class="text-muted" id="labelContagem"></small>
+            <div class="d-flex align-items-center gap-2">
+                <label class="small text-muted mb-0">Mostrar:</label>
+                <select id="limitarLinhas" class="form-select form-select-sm" style="width:auto"
+                    onchange="aplicarFiltrosEstoque()">
+                    <option value="30" selected>30</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="0">Todos</option>
+                </select>
+                <label class="small text-muted mb-0">por página</label>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover bg-white mb-0" id="tabelaEstoque">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0, 'tabelaEstoque')">Produto <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th onclick="sortTable(1, 'tabelaEstoque')">Marca <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th onclick="sortTable(2, 'tabelaEstoque')">Linha <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th>SKU</th>
+                        <th>Preço</th>
+                        <th>Qtd</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabela">
+                    {% for p in produtos %}
+                    <tr class="{{ 'opacity-50' if p.status == 'inativo' else '' }}">
+                        <td><strong>{{ p.nome }}</strong></td>
+                        <td><span class="badge bg-info text-dark small">{{ p.marca }}</span></td>
+                        <td>{{ p.linha }}</td>
+                        <td><small>{{ p.sku }}</small></td>
+                        <td>R$ {{ "%.2f"|format(p.preco) }}</td>
+                        <td class="{{ 'text-danger fw-bold' if p.quantidade <= 0 else '' }}">{{ p.quantidade }}</td>
+                        <td class="text-center">
+                            <span
+                                class="badge rounded-pill {{ 'bg-success-subtle text-success' if p.status == 'ativo' else 'bg-secondary-subtle text-secondary' }} px-3">
+                                {{ 'Ativo' if p.status == 'ativo' else 'Inativo' }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary me-1"
+                                onclick="abrirEditarEstoque('{{ p.id }}', '{{ p.nome }}', '{{ p.marca }}', '{{ p.linha }}', '{{ p.sku }}', '{{ p.preco }}', '{{ p.quantidade }}')">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <a href="/toggle_estoque/{{ p.id }}"
+                                class="btn btn-sm {{ 'btn-outline-danger' if p.status == 'ativo' else 'btn-outline-success' }}">
+                                <i class="bi {{ 'bi-toggle-on' if p.status == 'ativo' else 'bi-toggle-off' }}"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Botão FAB (+) -->
+    <button class="fab fab-estoque" onclick="abrirModalNovoProduto()">
+        <i class="bi bi-plus-square-fill"></i>
+    </button>
+
+    <!-- MODAL NOVO PRODUTO -->
+    <div class="modal fade" id="modalAdicionar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="POST" id="formNovoProduto" onsubmit="return validarNomeProduto(event)">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="fw-bold">Novo Produto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Nome</label>
+                            <div class="nome-wrapper">
+                                <input type="text" name="nome" id="novo_nome_produto" class="form-control" required
+                                    autocomplete="off" oninput="buscarSugestoesProduto(this.value)">
+                                <div id="sugestoes-nome"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Marca</label>
+                            <select name="marca" id="select_marca_novo" class="form-select" required>
+                                <option value="" selected disabled>Escolha...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Linha</label>
+                            <input type="text" name="linha" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">SKU</label>
+                            <input type="text" name="sku" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Preço</label>
+                            <input type="number" step="0.01" name="preco" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Quantidade</label>
+                            <input type="number" name="quantidade" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn btn-primary w-100 py-2">Salvar no Estoque</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR PRODUTO -->
+    <div class="modal fade" id="modalEditarProduto" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form id="formEditarProduto" method="POST">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="fw-bold">Editar Produto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Nome</label>
+                            <input type="text" name="nome" id="edit_nome" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Marca</label>
+                            <select name="marca" id="edit_marca" class="form-select" required>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Linha</label>
+                            <input type="text" name="linha" id="edit_linha" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">SKU</label>
+                            <input type="text" name="sku" id="edit_sku" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Preço</label>
+                            <input type="number" step="0.01" name="preco" id="edit_preco" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Qtd</label>
+                            <input type="number" name="quantidade" id="edit_quantidade" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn btn-success w-100 py-2">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal confirmação produto duplicado/similar -->
+    <div class="modal fade" id="modalSimilar" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h6 class="fw-bold text-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Produto já cadastrado
+                    </h6>
+                </div>
+                <div class="modal-body">
+                    <p id="msgSimilar" class="mb-3"></p>
+                    <label class="form-label small fw-bold">Quantidade a adicionar</label>
+                    <input type="number" id="qtdSomar" class="form-control" value="1" min="1">
+                </div>
+                <div class="modal-footer border-0 flex-column gap-2">
+                    <button type="button" class="btn btn-success w-100 py-2" onclick="confirmarSomarEstoque()">
+                        <i class="bi bi-plus-circle me-1"></i>Adicionar ao Saldo
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary w-100" onclick="cancelarSimilar()">
+                        Não, desejo alterar dados do produto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Carrega marcas dinamicamente na abertura dos modais
+        async function carregarMarcas(selectId, valorAtual = '') {
+            const res = await fetch('/api/marcas');
+            const marcas = await res.json();
+            const sel = document.getElementById(selectId);
+            sel.innerHTML = '<option value="" disabled>Escolha...</option>';
+            marcas.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.nome;
+                opt.textContent = m.nome;
+                if (m.nome === valorAtual) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            if (!valorAtual) sel.options[0].selected = true;
+        }
+
+        function abrirModalNovoProduto() {
+            carregarMarcas('select_marca_novo');
+            document.getElementById('novo_nome_produto').value = '';
+            document.getElementById('sugestoes-nome').innerHTML = '';
+            _permitirSubmitSimilar = false;
+            new bootstrap.Modal(document.getElementById('modalAdicionar')).show();
+        }
+
+        // Sugestões ao digitar (item 5)
+        let _debounceTimer = null;
+        const todosOsProdutos = {{ produtos | tojson }};
+
+        function buscarSugestoesProduto(valor) {
+            clearTimeout(_debounceTimer);
+            const box = document.getElementById('sugestoes-nome');
+            if (!valor || valor.length < 2) { box.innerHTML = ''; return; }
+            _debounceTimer = setTimeout(() => {
+                const termo = valor.toLowerCase();
+                const matches = todosOsProdutos.filter(p =>
+                    p.nome && p.nome.toLowerCase().includes(termo)
+                );
+                if (!matches.length) { box.innerHTML = ''; return; }
+                box.innerHTML = matches.slice(0, 50).map(p =>
+                    `<div class="sug-item">${p.nome}</div>`
+                ).join('');
+                box.querySelectorAll('.sug-item').forEach(el => {
+                    el.addEventListener('mousedown', () => {
+                        document.getElementById('novo_nome_produto').value = el.textContent;
+                        box.innerHTML = '';
+                    });
+                });
+            }, 200);
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.nome-wrapper')) {
+                document.getElementById('sugestoes-nome').innerHTML = '';
+            }
+        });
+
+        let _produtoDuplicadoId = null;
+        let _modalSimilarBS = null;
+        let _permitirSubmitSimilar = false;
+
+        async function validarNomeProduto(e) {
+            if (_permitirSubmitSimilar) return true;
+            e.preventDefault();
+
+            const nome = document.getElementById('novo_nome_produto').value.trim();
+            const sku = document.querySelector('[name="sku"]').value.trim();
+            if (!nome) return false;
+
+            const params = new URLSearchParams({ nome });
+            if (sku) params.append('sku', sku);
+
+            const res = await fetch('/api/verificar_produto?' + params.toString());
+            const data = await res.json();
+
+            if (data.status === 'identico') {
+                _produtoDuplicadoId = data.id;
+                const qtdDigitada = parseInt(document.querySelector('[name="quantidade"]').value) || 1;
+
+                document.getElementById('msgSimilar').innerHTML =
+                    `Já existe o produto <strong>"${data.nome}"</strong> cadastrado com ` +
+                    `<strong>${data.quantidade} unidade(s)</strong> em estoque.<br><br>` +
+                    `Deseja adicionar a quantidade digitada ao saldo atual?`;
+
+                document.getElementById('qtdSomar').value = qtdDigitada;
+
+                _modalSimilarBS = new bootstrap.Modal(document.getElementById('modalSimilar'));
+                _modalSimilarBS.show();
+                return false;
+            }
+
+            // Nenhum duplicado — submete normalmente
+            _permitirSubmitSimilar = true;
+            document.getElementById('formNovoProduto').submit();
+        }
+
+        async function confirmarSomarEstoque() {
+            const qtd = parseInt(document.getElementById('qtdSomar').value) || 1;
+            await fetch('/estoque/somar_quantidade/' + _produtoDuplicadoId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantidade: qtd })
+            });
+            _modalSimilarBS.hide();
+            bootstrap.Modal.getInstance(document.getElementById('modalAdicionar')).hide();
+            location.reload();
+        }
+
+        function cancelarSimilar() {
+            _produtoDuplicadoId = null;
+            if (_modalSimilarBS) _modalSimilarBS.hide();
+            document.getElementById('novo_nome_produto').focus();
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}?v=2.0"></script>
+    <script>
+        // Sobrescreve abrirEditarEstoque para carregar marcas dinamicamente
+        async function abrirEditarEstoque(id, nome, marca, linha, sku, preco, qtd) {
+            await carregarMarcas('edit_marca', marca);
+            document.getElementById('formEditarProduto').action = '/editar_produto/' + id;
+            document.getElementById('edit_nome').value = nome;
+            document.getElementById('edit_linha').value = linha;
+            document.getElementById('edit_sku').value = sku;
+            document.getElementById('edit_preco').value = preco;
+            document.getElementById('edit_quantidade').value = qtd;
+            new bootstrap.Modal(document.getElementById('modalEditarProduto')).show();
+        }
+    </script>
+</body>
+
+</html>

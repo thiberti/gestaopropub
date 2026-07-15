@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parâmetros - GestãoPro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/dashboard">🚀 GestãoPro</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto gap-2 mt-3 mt-lg-0">
+                    <a class="nav-link px-3" href="/dashboard">Home</a>
+                    <a class="nav-link px-3" href="/clientes">Clientes</a>
+                    <a class="nav-link px-3" href="/estoque">Estoque</a>
+                    <a class="nav-link px-3" href="/vendas">Vendas</a>
+                    <a class="nav-link px-3" href="/financeiro">Financeiro</a>
+                    <a class="nav-link px-3 active" href="/parametros">Parâmetros</a>
+                    <hr class="d-lg-none text-white-50">
+                    <a class="nav-link px-3 text-danger" href="/logout">
+                        <i class="bi bi-box-arrow-right"></i> Sair
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-4 fw-bold">⚙️ Parâmetros do Sistema</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="row g-4">
+
+            <!-- Seção: Conta / Usuário -->
+            <div class="col-12">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-header bg-white border-0 pt-4 pb-0">
+                        <h5 class="fw-bold"><i class="bi bi-person-circle me-2 text-primary"></i>Informações da Conta</h5>
+                        <p class="text-muted small">Dados básicos do usuário logado no sistema.</p>
+                    </div>
+                    <div class="card-body pb-4">
+                        <form method="POST" action="/parametros/conta">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Usuário</label>
+                                    <input type="text" class="form-control" value="{{ usuario_id }}" readonly disabled>
+                                    <div class="form-text">O nome de usuário não pode ser alterado.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Nova Senha</label>
+                                    <input type="password" name="nova_senha" class="form-control" placeholder="Deixe em branco para não alterar">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Confirmar Nova Senha</label>
+                                    <input type="password" name="confirmar_senha" class="form-control" placeholder="Repita a nova senha">
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class="bi bi-floppy-fill me-1"></i> Salvar Alterações
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Marcas de Produto -->
+            <div class="col-12">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-header bg-white border-0 pt-4 pb-0">
+                        <h5 class="fw-bold"><i class="bi bi-tags-fill me-2 text-success"></i>Marcas de Produto</h5>
+                        <p class="text-muted small">Gerencie as marcas disponíveis no cadastro de estoque.</p>
+                    </div>
+                    <div class="card-body pb-4">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Marcas Cadastradas</label>
+                                <div class="d-flex flex-wrap gap-2" id="listaMarcas">
+                                    {% for marca in marcas %}
+                                    <span class="badge bg-info text-dark fs-6 px-3 py-2 d-flex align-items-center gap-2">
+                                        {{ marca.nome }}
+                                        <button type="button" class="btn-close btn-close-dark" style="font-size:0.6rem;"
+                                            onclick="confirmarRemoverMarca('{{ marca.id }}', '{{ marca.nome }}')" title="Remover marca"></button>
+                                    </span>
+                                    {% endfor %}
+                                    {% if not marcas %}
+                                    <span class="text-muted small fst-italic">Nenhuma marca cadastrada ainda.</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <form method="POST" action="/parametros/marcas" class="row g-2 align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold">Adicionar Nova Marca</label>
+                                <input type="text" name="nome_marca" class="form-control" placeholder="Ex: HINODE" required
+                                    style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-plus-lg me-1"></i> Adicionar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Mensagem de Aniversário -->
+            <div class="col-12">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-header bg-white border-0 pt-4 pb-0">
+                        <h5 class="fw-bold"><i class="bi bi-whatsapp me-2 text-success"></i>Mensagem de Aniversário</h5>
+                        <p class="text-muted small">Texto enviado via WhatsApp ao clicar no botão de aniversário. Use <code>{nome}</code> para inserir o nome do cliente automaticamente.</p>
+                    </div>
+                    <div class="card-body pb-4">
+                        <form method="POST" action="/parametros/mensagens">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Mensagem</label>
+                                    <textarea name="msg_aniversario" class="form-control" rows="3"
+                                        placeholder="Ex: Olá {nome}! 🎂 Feliz aniversário!">{{ msg_aniversario }}</textarea>
+                                    <div class="form-text">Prévia: a variável <code>{nome}</code> será substituída pelo nome real do cliente.</div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-success px-4">
+                                        <i class="bi bi-floppy-fill me-1"></i> Salvar Mensagem
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal confirmar remoção de marca -->
+    <div class="modal fade" id="modalRemoverMarca" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h6 class="fw-bold">Remover Marca</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p>Remover a marca <strong id="nomeMarcaRemover"></strong>?</p>
+                    <p class="text-muted small">Produtos já cadastrados com essa marca não serão afetados.</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <form method="POST" id="formRemoverMarca">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger ms-2">Remover</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function confirmarRemoverMarca(id, nome) {
+            document.getElementById('nomeMarcaRemover').textContent = nome;
+            document.getElementById('formRemoverMarca').action = '/parametros/marcas/remover/' + id;
+            new bootstrap.Modal(document.getElementById('modalRemoverMarca')).show();
+        }
+    </script>
+</body>
+</html>

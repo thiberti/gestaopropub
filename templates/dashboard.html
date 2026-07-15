@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - GestãoPro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* ── Seção título ── */
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+
+        /* ── Card base da home ── */
+        .home-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .04);
+        }
+
+        /* ── Aniversariantes ── */
+        .aniv-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .aniv-item:last-child {
+            border-bottom: none;
+        }
+
+        .aniv-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .aniv-hoje {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+        }
+
+        .aniv-badge {
+            font-size: 0.68rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .aniv-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+            color: #94a3b8;
+        }
+
+        /* ── Post-its ── */
+        .postit-card {
+            border-radius: 12px;
+            padding: 18px 20px;
+            min-height: 110px;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, .08);
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 12px;
+        }
+
+        .postit-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .postit-counter {
+            font-size: 0.78rem;
+            color: #94a3b8;
+        }
+
+        .postit-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 110px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+
+        /* ── Brand cards ── */
+        .brand-card {
+            border-radius: 14px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: transform .2s, box-shadow .2s;
+            text-decoration: none;
+            padding: 0;
+        }
+
+        .brand-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+        }
+
+        .brand-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 14px;
+            display: block;
+        }
+
+        /* ── Ranking ── */
+        .rank-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .rank-row:last-child {
+            border-bottom: none;
+        }
+
+        .rank-medal {
+            font-size: 1.4rem;
+            width: 36px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .rank-bar-wrap {
+            flex: 1;
+        }
+
+        .rank-bar {
+            height: 6px;
+            border-radius: 99px;
+            background: #e2e8f0;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .rank-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+        }
+
+        .rank-val {
+            text-align: right;
+            white-space: nowrap;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .rank-sub {
+            font-size: 0.72rem;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/dashboard">🚀 GestãoPro</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto gap-2 mt-3 mt-lg-0">
+                    <a class="nav-link px-3 active" href="/dashboard">Home</a>
+                    <a class="nav-link px-3" href="/clientes">Clientes</a>
+                    <a class="nav-link px-3" href="/estoque">Estoque</a>
+                    <a class="nav-link px-3" href="/vendas">Vendas</a>
+                    <a class="nav-link px-3" href="/financeiro">Financeiro</a>
+                    <a class="nav-link px-3" href="/parametros">Parâmetros</a>
+                    <hr class="d-lg-none text-white-50">
+                    <a class="nav-link px-3 text-danger" href="/logout">
+                        <i class="bi bi-box-arrow-right"></i> Sair
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+
+        <!-- ══════════════════════════════════════
+             LINHA 1 — Aniversariantes  |  Anotações
+             ══════════════════════════════════════ -->
+        <div class="row g-4 mb-4">
+
+            <!-- Aniversariantes -->
+            <div class="col-lg-5">
+                <p class="section-label">🎂 Próximos Aniversariantes</p>
+                <div class="home-card p-4 h-100">
+                    {% if aniversariantes %}
+                    {% for a in aniversariantes[:7] %}
+                    <div class="aniv-item">
+                        <div class="aniv-avatar {{ 'aniv-hoje' if a.dias_para_aniversario == 0 else '' }}">
+                            {{ a.nome[0].upper() }}
+                        </div>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="fw-semibold text-truncate" style="font-size:.88rem">{{ a.nome }}</div>
+                            <div class="text-muted" style="font-size:.75rem">{{ a.data_formatada }} &bull; {{ a.telefone
+                                }}</div>
+                        </div>
+                        {% if a.dias_para_aniversario == 0 %}
+                        <span class="aniv-badge bg-danger text-white">Hoje 🎉</span>
+                        {% elif a.dias_para_aniversario <= 3 %} <span class="aniv-badge bg-warning text-dark">{{
+                            a.dias_para_aniversario }}d</span>
+                            {% else %}
+                            <span class="aniv-badge bg-light text-muted border">{{ a.dias_para_aniversario }}d</span>
+                            {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="aniv-empty">
+                        <i class="bi bi-calendar-heart fs-2 mb-2 opacity-25"></i>
+                        <span style="font-size:.85rem">Nenhum aniversariante nos próximos 30 dias</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Anotações (Post-its) -->
+            <div class="col-lg-7">
+                <div class="d-flex align-items-center justify-content-between mb-0"
+                    style="margin-bottom:12px!important">
+                    <p class="section-label mb-0">📝 Anotações</p>
+                    <button class="btn btn-sm btn-primary px-3" onclick="abrirModalPostit()"
+                        style="border-radius:8px;font-size:.8rem">
+                        <i class="bi bi-plus-lg me-1"></i>Nova Nota
+                    </button>
+                </div>
+                <div class="home-card p-4 h-100" style="margin-top:12px">
+                    <div id="postitVazio" class="postit-empty">
+                        <i class="bi bi-sticky fs-2 mb-2 opacity-25"></i>
+                        <span style="font-size:.85rem">Nenhuma anotação ainda</span>
+                    </div>
+                    <div id="postitDisplay" class="postit-card" style="display:none"></div>
+
+                    <div class="postit-nav">
+                        <button class="btn btn-sm btn-outline-secondary px-3" id="btnAnterior" onclick="navPostit(-1)">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <span class="postit-counter" id="postitCounter"></span>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-danger px-3" id="btnDeletarPostit"
+                                onclick="deletarPostitAtual()">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary px-3" id="btnProximo"
+                                onclick="navPostit(1)">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             LINHA 2 — Revendas
+             ══════════════════════════════════════ -->
+        <p class="section-label">🏪 Revendas</p>
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <a href="https://www.demillus.com.br/portalpedidos/Web"
+                    target="_blank" class="brand-card">
+                    <img src="{{ url_for('static', filename='img/demillus.png') }}" alt="AVON">
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="https://revendedores.grupoboticario.com.br/login" target="_blank" class="brand-card">
+                    <img src="{{ url_for('static', filename='img/boticário.jpg') }}" alt="Boticário">
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="https://www.natura.com.br/login?redirect=%2Facesso-consultor&origin=menu" target="_blank"
+                    class="brand-card">
+                    <img src="{{ url_for('static', filename='img/natura.png') }}" alt="Natura">
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="https://revendedores.grupoboticario.com.br/" target="_blank" class="brand-card">
+                    <img src="{{ url_for('static', filename='img/eudora.jpg') }}" alt="Eudora">
+                </a>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             LINHA 3 — Ranking Top 3
+             ══════════════════════════════════════ -->
+        <p class="section-label">🏆 Produtos Mais Vendidos</p>
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="home-card p-4">
+                    <div class="d-flex align-items-center justify-content-end mb-3 gap-2">
+                        <select id="rankOrdem" class="form-select form-select-sm" style="width:auto;border-radius:8px"
+                            onchange="filtrarRanking()">
+                            <option value="qtd">Por quantidade</option>
+                            <option value="valor">Por valor</option>
+                        </select>
+                    </div>
+                    <div id="rankingLista"></div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /container -->
+
+    <!-- ══════════════════════════════════════
+         MODAL NOVO POST-IT
+         ══════════════════════════════════════ -->
+    <div class="modal fade" id="modalPostit" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content" style="border-radius:16px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15)">
+                <div class="modal-header border-0 pb-0">
+                    <h6 class="fw-bold">Nova Anotação</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea id="novoPostitTexto" class="form-control mb-3" rows="4" placeholder="Digite sua nota..."
+                        style="border-radius:10px;resize:none"></textarea>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="small text-muted">Cor:</span>
+                        {% for cor in ['#fef9c3','#d1fae5','#dbeafe','#fce7f3','#ede9fe'] %}
+                        <div class="cor-opcao" data-cor="{{ cor }}"
+                            style="width:22px;height:22px;border-radius:50%;background:{{ cor }};border:2px solid #e2e8f0;cursor:pointer;transition:.15s"
+                            onclick="selecionarCor('{{ cor }}')"></div>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" id="corPostitSelecionada" value="#fef9c3">
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-primary w-100 py-2" style="border-radius:10px" onclick="salvarPostit()">
+                        Salvar nota
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         POP-UP ANIVERSÁRIO
+         ══════════════════════════════════════ -->
+    {% set proximos = aniversariantes | selectattr("dias_para_aniversario", "le", 3) | list %}
+    {% if proximos %}
+    <div class="modal fade" id="modalAniversario" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:20px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold">🎉 Aniversários em breve!</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-1">
+                    {% for a in proximos %}
+                    <div class="py-3 {{ 'border-bottom' if not loop.last }}">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="aniv-avatar {{ 'aniv-hoje' if a.dias_para_aniversario == 0 else '' }}"
+                                style="width:44px;height:44px;font-size:1rem;flex-shrink:0">
+                                {{ a.nome[0].upper() }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold" style="font-size:.92rem">{{ a.nome }}</div>
+                                <div class="text-muted small">{{ a.telefone }}</div>
+                            </div>
+                            <div>
+                                {% if a.dias_para_aniversario == 0 %}
+                                <span class="badge bg-danger rounded-pill px-3">Hoje! 🎉</span>
+                                {% elif a.dias_para_aniversario == 1 %}
+                                <span class="badge bg-warning text-dark rounded-pill px-3">Amanhã</span>
+                                {% else %}
+                                <span class="badge bg-info text-dark rounded-pill px-3">Em {{ a.dias_para_aniversario }}
+                                    dias</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if a.telefone %}
+                        <button class="btn btn-sm w-100 py-2"
+                            style="background:#25D366;color:#fff;border-radius:10px;font-weight:600;border:none"
+                            onclick="abrirWhatsapp('{{ a.telefone }}', '{{ a.nome }}')">
+                            <i class="bi bi-whatsapp me-2"></i>Enviar mensagem de aniversário
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary w-100 py-2" style="border-radius:10px"
+                        data-bs-dismiss="modal">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════
+         RODAPÉ
+         ══════════════════════════════════════ -->
+    <footer class="text-center py-4 mt-2" style="border-top:1px solid #e2e8f0;color:#94a3b8;font-size:.78rem">
+        <span>GestãoPro &bull; v{{ versao_atual }}</span>
+        &nbsp;&bull;&nbsp;
+        <button class="btn btn-link p-0 text-muted" style="font-size:.78rem;text-decoration:none"
+            onclick="abrirNovidades()">
+            <i class="bi bi-stars me-1"></i>Notas de Atualização
+        </button>
+    </footer>
+
+    <!-- ══════════════════════════════════════
+         MODAL NOVIDADES
+         ══════════════════════════════════════ -->
+    <div class="modal fade" id="modalNovidades" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:520px">
+            <div class="modal-content" style="border-radius:20px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15)">
+
+                <!-- Header com badge de versão -->
+                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span style="font-size:1.5rem">🚀</span>
+                            <span class="badge px-3 py-1" style="background:#0d6efd;font-size:.8rem;border-radius:20px">
+                                v{{ versao_atual }}
+                            </span>
+                        </div>
+                        <h5 class="fw-bold mb-0">{{ notas.titulo }}</h5>
+                        <p class="text-muted mb-0" style="font-size:.8rem">Atualizado em {{ notas.data }}</p>
+                    </div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"
+                        onclick="marcarVisto()"></button>
+                </div>
+
+                <div class="modal-body px-4 pt-3 pb-2">
+
+                    <!-- Novidades -->
+                    {% if notas.novidades %}
+                    <p class="fw-bold mb-2"
+                        style="font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:#64748b">
+                        ✨ Novidades
+                    </p>
+                    <ul class="list-unstyled mb-3">
+                        {% for item in notas.novidades %}
+                        <li class="py-2 border-bottom d-flex align-items-start gap-2"
+                            style="font-size:.88rem;color:#334155">
+                            {{ item }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    <!-- Correções -->
+                    {% if notas.correcoes %}
+                    <p class="fw-bold mb-2"
+                        style="font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:#64748b">
+                        🔧 Correções
+                    </p>
+                    <ul class="list-unstyled mb-2">
+                        {% for item in notas.correcoes %}
+                        <li class="py-2 border-bottom d-flex align-items-start gap-2"
+                            style="font-size:.88rem;color:#334155">
+                            {{ item }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                </div>
+
+                <div class="modal-footer border-0 px-4 pb-4 pt-2">
+                    <button class="btn btn-primary w-100 py-2" style="border-radius:10px;font-weight:600"
+                        data-bs-dismiss="modal" onclick="marcarVisto()">
+                        Entendido, bora usar! 🚀
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}?v=3.0"></script>
+    <script>
+        const rankingBase = {{ ranking | tojson }};
+        const todosPostits = {{ postits | tojson }};
+        const msgAniversario = {{ msg_aniversario | tojson }};
+        const versaoAtual = {{ versao_atual | tojson }};
+        const mostrarNovidades = {{ mostrar_novidades | tojson }};
+
+        // ── Pop-up aniversário ──────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            {% if proximos %}
+            new bootstrap.Modal(document.getElementById('modalAniversario')).show();
+            {% endif %}
+            {% if mostrar_novidades %}
+            new bootstrap.Modal(document.getElementById('modalNovidades')).show();
+            {% endif %}
+            renderPostits();
+            filtrarRanking();
+            const primeiraOpcao = document.querySelector('.cor-opcao[data-cor="#fef9c3"]');
+            if (primeiraOpcao) primeiraOpcao.style.borderColor = '#0d6efd';
+        });
+
+        // ── Post-its ────────────────────────────────
+        let postitIndex = 0;
+        let postitsList = [...todosPostits];
+
+        function renderPostits() {
+            const display = document.getElementById('postitDisplay');
+            const vazio = document.getElementById('postitVazio');
+            const counter = document.getElementById('postitCounter');
+            const btnAnt = document.getElementById('btnAnterior');
+            const btnPrx = document.getElementById('btnProximo');
+            const btnDel = document.getElementById('btnDeletarPostit');
+
+            if (!postitsList.length) {
+                display.style.display = 'none';
+                vazio.style.display = 'flex';
+                counter.textContent = '';
+                btnAnt.disabled = btnPrx.disabled = true;
+                btnDel.style.visibility = 'hidden';
+                return;
+            }
+
+            if (postitIndex >= postitsList.length) postitIndex = postitsList.length - 1;
+            if (postitIndex < 0) postitIndex = 0;
+
+            const p = postitsList[postitIndex];
+            vazio.style.display = 'none';
+            display.style.display = 'block';
+            display.style.background = p.cor || '#fef9c3';
+            display.textContent = p.texto;
+            counter.textContent = `${postitIndex + 1} / ${postitsList.length}`;
+            btnAnt.disabled = postitIndex === 0;
+            btnPrx.disabled = postitIndex === postitsList.length - 1;
+            btnDel.style.visibility = 'visible';
+        }
+
+        function navPostit(dir) { postitIndex += dir; renderPostits(); }
+
+        function abrirModalPostit() {
+            document.getElementById('novoPostitTexto').value = '';
+            new bootstrap.Modal(document.getElementById('modalPostit')).show();
+        }
+
+        function selecionarCor(cor) {
+            document.getElementById('corPostitSelecionada').value = cor;
+            document.querySelectorAll('.cor-opcao').forEach(el =>
+                el.style.borderColor = el.dataset.cor === cor ? '#0d6efd' : '#e2e8f0'
+            );
+        }
+
+        async function salvarPostit() {
+            const texto = document.getElementById('novoPostitTexto').value.trim();
+            const cor = document.getElementById('corPostitSelecionada').value;
+            if (!texto) return;
+            const res = await fetch('/postit/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ texto, cor })
+            });
+            const data = await res.json();
+            postitsList.push(data);
+            postitIndex = postitsList.length - 1;
+            bootstrap.Modal.getInstance(document.getElementById('modalPostit')).hide();
+            renderPostits();
+        }
+
+        async function deletarPostitAtual() {
+            if (!postitsList.length) return;
+            const p = postitsList[postitIndex];
+            if (!confirm('Remover esta anotação?')) return;
+            await fetch('/postit/delete/' + p.id, { method: 'POST' });
+            postitsList.splice(postitIndex, 1);
+            if (postitIndex > 0) postitIndex--;
+            renderPostits();
+        }
+
+        // ── Notas de atualização ────────────────────
+        async function marcarVisto() {
+            await fetch('/marcar_versao_vista', { method: 'POST' });
+        }
+        function abrirNovidades() {
+            new bootstrap.Modal(document.getElementById('modalNovidades')).show();
+        }
+
+        // ── WhatsApp aniversário ────────────────────
+        function abrirWhatsapp(telefone, nome) {
+            const tel = telefone.replace(/\D/g, '');
+            const msg = msgAniversario.replace('{nome}', nome);
+            const url = 'https://wa.me/55' + tel + '?text=' + encodeURIComponent(msg);
+            window.open(url, '_blank');
+        }
+
+        // ── Ranking Top 3 ───────────────────────────
+        const MEDALS = ['🥇', '🥈', '🥉'];
+        const BAR_COLORS = ['#f59e0b', '#94a3b8', '#cd7f32'];
+
+        function filtrarRanking() {
+            const ordem = document.getElementById('rankOrdem').value;
+            const lista = [...rankingBase].sort((a, b) =>
+                ordem === 'valor' ? b.valor - a.valor : b.quantidade - a.quantidade
+            ).slice(0, 3);
+
+            const container = document.getElementById('rankingLista');
+            if (!lista.length) {
+                container.innerHTML = '<p class="text-muted text-center py-4">Nenhuma venda registrada ainda.</p>';
+                return;
+            }
+
+            const maxVal = ordem === 'valor' ? lista[0].valor : lista[0].quantidade;
+
+            container.innerHTML = lista.map((item, i) => {
+                const val = ordem === 'valor' ? item.valor : item.quantidade;
+                const valFmt = ordem === 'valor' ? 'R$ ' + item.valor.toFixed(2) : item.quantidade + ' un';
+                const subFmt = ordem === 'valor' ? item.quantidade + ' un vendidas' : 'R$ ' + item.valor.toFixed(2) + ' em vendas';
+                const barPct = maxVal > 0 ? Math.round((val / maxVal) * 100) : 0;
+                const color = BAR_COLORS[i];
+                return `
+            <div class="rank-row">
+                <div class="rank-medal">${MEDALS[i]}</div>
+                <div class="rank-bar-wrap">
+                    <div style="font-size:.88rem;font-weight:600;color:#1e293b">${item.nome}</div>
+                    <div class="rank-bar">
+                        <div class="rank-bar-fill" style="width:${barPct}%;background:${color}"></div>
+                    </div>
+                </div>
+                <div class="rank-val">
+                    ${valFmt}
+                    <div class="rank-sub">${subFmt}</div>
+                </div>
+            </div>`;
+            }).join('');
+        }
+    </script>
+</body>
+
+</html>

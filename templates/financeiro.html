@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financeiro - GestãoPro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5">
+        <div class="container">
+            <!-- Logo -->
+            <a class="navbar-brand fw-bold" href="/dashboard">🚀 GestãoPro</a>
+
+            <!-- Botão Hamburguer (Só aparece no celular) -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Links do Menu -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto gap-2 mt-3 mt-lg-0">
+                    <a class="nav-link px-3" href="/dashboard">Home</a>
+                    <a class="nav-link px-3" href="/clientes">Clientes</a>
+                    <a class="nav-link px-3" href="/estoque">Estoque</a>
+                    <a class="nav-link px-3" href="/vendas">Vendas</a>
+                    <a class="nav-link px-3" href="/financeiro">Financeiro</a>
+                    <a class="nav-link px-3" href="/parametros">Parâmetros</a>
+                    <hr class="d-lg-none text-white-50"> <!-- Linha divisória apenas no celular -->
+                    <a class="nav-link px-3 text-danger" href="/logout">
+                        <i class="bi bi-box-arrow-right"></i> Sair
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <h2 class="mb-4 fw-bold">💰 Gestão Financeira</h2>
+
+        <div class="row g-4 mb-5 text-center">
+            <div class="col-md-4">
+                <div class="card p-4 shadow-sm border-0" style="background-color: #198754; color: white;">
+                    <small class="text-white-50 text-uppercase fw-bold">Entradas Pagas</small>
+                    <h2 class="mb-0 fw-bold">R$ {{ "%.2f"|format(total_entradas) }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-4 shadow-sm border-0" style="background-color: #dc3545; color: white;">
+                    <small class="text-white-50 text-uppercase fw-bold">Saídas Pagas</small>
+                    <h2 class="mb-0 fw-bold">R$ {{ "%.2f"|format(total_saidas) }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-4 shadow-sm border-0" style="background-color: #0d6efd; color: white;">
+                    <small class="text-white-50 text-uppercase fw-bold">Saldo em Caixa</small>
+                    <h2 class="mb-0 fw-bold">R$ {{ "%.2f"|format(saldo) }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive shadow-sm">
+            <table class="table table-hover bg-white mb-0" id="tabelaFinanceiro">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0, 'tabelaFinanceiro')">Descrição <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th onclick="sortTable(1, 'tabelaFinanceiro')">Tipo <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th onclick="sortTable(2, 'tabelaFinanceiro')">Vencimento <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th onclick="sortTable(3, 'tabelaFinanceiro')">Valor <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th class="text-center" onclick="sortTable(4, 'tabelaFinanceiro')">Status <i
+                                class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in lancamentos %}
+                    <tr class="{{ 'text-decoration-line-through opacity-50' if f.status == 'cancelado' else '' }}">
+                        <td><strong>{{ f.descricao }}</strong></td>
+                        <td>
+                            <span
+                                class="badge rounded-pill {{ 'bg-success-subtle text-success' if f.tipo == 'entrada' else 'bg-danger-subtle text-danger' }} px-3">
+                                {{ f.tipo.upper() }}
+                            </span>
+                        </td>
+                        <td>{{ f.data_vencimento | formato_br }}</td>
+                        <td class="fw-bold">R$ {{ "%.2f"|format(f.valor) }}</td>
+                        <td class="text-center">
+                            {% if f.status == 'pago' %}
+                            <span
+                                class="badge rounded-pill bg-success-subtle text-success border border-success-subtle p-2 px-3">PAGO/RECEBIDO</span>
+                            {% elif f.status == 'vencido' %}
+                            <span
+                                class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle p-2 px-3">VENCIDO</span>
+                            {% elif f.status == 'cancelado' %}
+                            <span
+                                class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle p-2 px-3">CANCELADO</span>
+                            {% else %}
+                            <span
+                                class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle p-2 px-3">EM
+                                ABERTO</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if f.status != 'cancelado' %}
+                            <div class="d-flex gap-1 justify-content-center">
+                                {% if not f.id_venda %}
+                                <!-- Ações apenas para Manuais -->
+                                {% if f.status != 'pago' %}
+                                <button class="btn btn-sm btn-outline-primary"
+                                    onclick="abrirEditarFinanceiro('{{ f.id }}', '{{ f.descricao }}', '{{ f.valor }}', '{{ f.tipo }}', '{{ f.data_vencimento }}')"><i
+                                        class="bi bi-pencil-fill"></i></button>
+                                <a href="/pagar_financeiro/{{ f.id }}" class="btn btn-sm btn-success"
+                                    title="Dar Baixa"><i class="bi bi-check-lg"></i></a>
+                                {% endif %}
+                                {% endif %}
+                                <a href="/cancelar_financeiro/{{ f.id }}" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Cancelar este lançamento?')"><i
+                                        class="bi bi-trash-fill"></i></a>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FAB -->
+    <button class="fab fab-financeiro" data-bs-toggle="modal" data-bs-target="#modalNovoLancamento"><i
+            class="bi bi-plus-lg"></i></button>
+
+    <!-- MODAL NOVO -->
+    <div class="modal fade" id="modalNovoLancamento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content shadow">
+                <form method="POST">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="fw-bold">Novo Lançamento Manual</h5><button type="button" class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body row g-3">
+                        <div class="col-12"><label class="form-label small fw-bold">Descrição</label><input type="text"
+                                name="descricao" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Valor</label><input type="number"
+                                step="0.01" name="valor" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Tipo</label><select name="tipo"
+                                class="form-select">
+                                <option value="entrada">Entrada (+)</option>
+                                <option value="saida">Saída (-)</option>
+                            </select></div>
+                        <div class="col-12"><label class="form-label small fw-bold">Vencimento</label><input type="date"
+                                name="data_vencimento" id="venc_hoje" class="form-control" required></div>
+                    </div>
+                    <div class="modal-footer border-0"><button type="submit" class="btn btn-primary w-100 py-2">Salvar
+                            Lançamento</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR -->
+    <div class="modal fade" id="modalEditarFinanceiro" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content shadow">
+                <form id="formEditarFinanceiro" method="POST">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="fw-bold">Editar Lançamento</h5><button type="button" class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body row g-3">
+                        <div class="col-12"><label class="form-label small fw-bold">Descrição</label><input type="text"
+                                name="descricao" id="edit_fin_desc" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Valor</label><input type="number"
+                                step="0.01" name="valor" id="edit_fin_valor" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Tipo</label><select name="tipo"
+                                id="edit_fin_tipo" class="form-select">
+                                <option value="entrada">Entrada (+)</option>
+                                <option value="saida">Saída (-)</option>
+                            </select></div>
+                        <div class="col-12"><label class="form-label small fw-bold">Vencimento</label><input type="date"
+                                name="data_vencimento" id="edit_fin_venc" class="form-control" required></div>
+                    </div>
+                    <div class="modal-footer border-0"><button type="submit" class="btn btn-success w-100 py-2">Salvar
+                            Alterações</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}?v=1.6"></script>
+    <script>document.getElementById('venc_hoje').valueAsDate = new Date();</script>
+</body>
+
+</html>

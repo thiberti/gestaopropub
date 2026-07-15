@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes - GestãoPro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/dashboard">🚀 GestãoPro</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto gap-2 mt-3 mt-lg-0">
+                    <a class="nav-link px-3" href="/dashboard">Home</a>
+                    <a class="nav-link px-3" href="/clientes">Clientes</a>
+                    <a class="nav-link px-3" href="/estoque">Estoque</a>
+                    <a class="nav-link px-3" href="/vendas">Vendas</a>
+                    <a class="nav-link px-3" href="/financeiro">Financeiro</a>
+                    <a class="nav-link px-3" href="/parametros">Parâmetros</a>
+                    <hr class="d-lg-none text-white-50">
+                    <a class="nav-link px-3 text-danger" href="/logout">
+                        <i class="bi bi-box-arrow-right"></i> Sair
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-4 fw-bold">👥 Cadastro de Clientes</h2>
+        <div class="table-responsive">
+            <table class="table table-hover bg-white mb-0" id="tabelaClientes">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0, 'tabelaClientes')">Nome <i class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th onclick="sortTable(1, 'tabelaClientes')">Telefone <i class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th onclick="sortTable(2, 'tabelaClientes')">Nascimento <i class="bi bi-arrow-down-up ms-1 small opacity-50"></i></th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in clientes %}
+                    <tr class="{{ 'opacity-50' if c.status == 'inativo' else '' }}">
+                        <td><strong>{{ c.nome }}</strong></td>
+                        <td>{{ c.telefone }}</td>
+                        <td>{{ c.data_nascimento | formato_br if c.data_nascimento else '—' }}</td>
+                        <td class="text-center">
+                            {% if c.status == 'ativo' %}
+                            <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3">Ativo</span>
+                            {% else %}
+                            <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-3">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary me-1"
+                                onclick="abrirEditarCliente('{{ c.id }}', '{{ c.nome }}', '{{ c.telefone }}', '{{ c.data_nascimento if c.data_nascimento else '' }}')">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <a href="/toggle_cliente/{{ c.id }}"
+                                class="btn btn-sm {{ 'btn-outline-danger' if c.status == 'ativo' else 'btn-outline-success' }}"
+                                title="{{ 'Inativar' if c.status == 'ativo' else 'Ativar' }}">
+                                <i class="bi {{ 'bi-toggle-on' if c.status == 'ativo' else 'bi-toggle-off' }}"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Botão FAB -->
+    <button class="fab fab-clientes" data-bs-toggle="modal" data-bs-target="#modalCliente">
+        <i class="bi bi-person-plus-fill"></i>
+    </button>
+
+    <!-- MODAL NOVO -->
+    <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="fw-bold">Novo Cliente</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Nome</label>
+                            <input type="text" name="nome" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Telefone</label>
+                            <input type="text" name="telefone" class="form-control tel-mask" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Data de Nascimento</label>
+                            <input type="date" name="data_nascimento" class="form-control">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn btn-primary w-100 py-2">Salvar Cliente</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR -->
+    <div class="modal fade" id="modalEditarCliente" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="formEditarCliente" method="POST">
+                    <div class="modal-header">
+                        <h5 class="fw-bold">Editar Cliente</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Nome</label>
+                            <input type="text" name="nome" id="edit_nome_cli" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Telefone</label>
+                            <input type="text" name="telefone" id="edit_tel_cli" class="form-control tel-mask">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Data de Nascimento</label>
+                            <input type="date" name="data_nascimento" id="edit_nasc_cli" class="form-control">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success w-100 py-2">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}?v=2.0"></script>
+</body>
+</html>
