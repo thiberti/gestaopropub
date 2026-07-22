@@ -95,7 +95,7 @@
                                 <button class="btn btn-sm btn-outline-primary"
                                     onclick="abrirVenda('{{ v.id }}', false)"><i class="bi bi-pencil-fill"></i></button>
                                 <!-- Procure o botão de pagar e substitua por este: -->
-                                <a href="{{ url_for('pagar_venda', id=v.id) }}" class="btn btn-sm btn-success"
+                                <a href="{{ url_for('vendas.pagar_venda', id=v.id) }}" class="btn btn-sm btn-success"
                                     onclick="return confirm('Confirmar recebimento?')" title="Confirmar Pagamento">
                                     <i class="bi bi-check-lg"></i>
                                 </a>
@@ -160,21 +160,25 @@
                             <div class="col-md-3">
                                 <label class="small fw-bold">Vencimento</label>
                                 <div class="input-group">
-                                    <input type="date" name="data_vencimento" id="campo_vencimento" class="form-control" required>
+                                    <input type="date" name="data_vencimento" id="campo_vencimento" class="form-control"
+                                        required>
                                     <!-- Botão Faturamento discreto -->
                                     <div class="dropdown">
-                                        <button type="button" class="btn btn-outline-secondary px-2"
-                                            id="btnFaturamento"
-                                            data-bs-toggle="dropdown"
-                                            title="Faturamento — intervalo entre parcelas"
+                                        <button type="button" class="btn btn-outline-secondary px-2" id="btnFaturamento"
+                                            data-bs-toggle="dropdown" title="Faturamento — intervalo entre parcelas"
                                             style="border-radius:0 0.375rem 0.375rem 0; font-size:0.85rem;">
                                             <i class="bi bi-calendar2-range"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width:130px;">
-                                            <li><h6 class="dropdown-header small text-muted">Intervalo</h6></li>
-                                            <li><a class="dropdown-item small" href="#" onclick="setarFaturamento(7)">7 Dias</a></li>
-                                            <li><a class="dropdown-item small" href="#" onclick="setarFaturamento(15)">15 Dias</a></li>
-                                            <li><a class="dropdown-item small" href="#" onclick="setarFaturamento(30)">30 Dias</a></li>
+                                            <li>
+                                                <h6 class="dropdown-header small text-muted">Intervalo</h6>
+                                            </li>
+                                            <li><a class="dropdown-item small" href="#" onclick="setarFaturamento(7)">7
+                                                    Dias</a></li>
+                                            <li><a class="dropdown-item small" href="#"
+                                                    onclick="setarFaturamento(15)">15 Dias</a></li>
+                                            <li><a class="dropdown-item small" href="#"
+                                                    onclick="setarFaturamento(30)">30 Dias</a></li>
                                         </ul>
                                     </div>
                                 </div>
