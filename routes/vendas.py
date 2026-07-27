@@ -5,7 +5,10 @@ import json
 from firebase import db
 from utils.auth import login_required
 
-from services.vendas_service import gerar_proximo_pedido
+from services.vendas_service import (
+    gerar_proximo_pedido,
+    criar_venda,
+)
 
 vendas_bp = Blueprint(
     "vendas",
@@ -16,32 +19,7 @@ vendas_bp = Blueprint(
 @login_required
 def vendas():
     if request.method == "POST":
-        itens = json.loads(request.form.get("itens_venda"))
-        dados = {
-            "numero_pedido": gerar_proximo_pedido(),
-            "cliente": request.form.get("cliente"),
-            "data_emissao": request.form.get("data_emissao"),
-            "vencimento": request.form.get("data_vencimento"),
-            "status": "aberto",
-            "total_geral": float(request.form.get("total_geral_input", 0) or 0),
-            "itens": itens,
-            "parcelas": int(request.form.get("parcelas", 1) or 1),
-            "intervalo_parcelas": int(request.form.get("intervalo_parcelas", 30) or 30),
-            "forma_pagamento": request.form.get("forma_pagamento"),
-            "observacao": request.form.get("observacao"),
-            "desconto_total_percent": float(request.form.get("desconto_total", 0) or 0),
-        }
-        db.collection("vendas").add(dados)
-        for item in itens:
-            ref_p = db.collection("produtos").document(item["id"])
-            doc_p = ref_p.get()
-            if doc_p.exists:
-                ref_p.update(
-                    {
-                        "quantidade": doc_p.to_dict().get("quantidade", 0)
-                        - int(item["quantidade"])
-                    }
-                )
+        criar_venda(request.form)
         return redirect(url_for("vendas.vendas"))
 
     hoje = datetime.now().strftime("%Y-%m-%d")
