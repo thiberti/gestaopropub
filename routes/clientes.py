@@ -1,19 +1,16 @@
 from flask import Blueprint, render_template, request, redirect, url_for
-from datetime import datetime
-
-from firebase import db
 from utils.auth import login_required
-
-clientes_bp = Blueprint(
-    "clientes",
-    __name__
-)
 
 from services.clientes_service import (
     listar_clientes,
     adicionar_cliente,
     atualizar_cliente,
     alterar_status_cliente,
+)
+
+clientes_bp = Blueprint(
+    "clientes",
+    __name__
 )
 
 @clientes_bp.route("/clientes", methods=["GET", "POST"])

@@ -15,8 +15,10 @@ def login():
         senha_digitada = request.form.get("password")
         user_doc = db.collection("usuarios").document(usuario_digitado).get()
         if user_doc.exists:
-            if check_password_hash(user_doc.to_dict()["password"], senha_digitada):
+            dados_usuario = user_doc.to_dict()
+            if check_password_hash(dados_usuario["password"], senha_digitada):
                 session["user_id"] = usuario_digitado
+                session["empresa_id"] = dados_usuario.get("empresa_id", "empresa_demo")
                 return redirect(url_for("dashboard.dashboard"))
         flash("Usuário ou senha incorretos.", "danger")
     return render_template("login.html")
