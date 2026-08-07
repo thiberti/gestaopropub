@@ -3,6 +3,7 @@ from datetime import datetime
 
 from firebase import db
 from utils.auth import login_required
+from utils.empresa import colecao_empresa  # 🔹 NOVO
 
 from config import VERSAO_ATUAL, NOTAS_VERSAO
 
@@ -10,8 +11,6 @@ dashboard_bp = Blueprint(
     "dashboard",
     __name__
 )
-
-print("Dashboard carregado!")
 
 @dashboard_bp.route("/")
 @dashboard_bp.route("/dashboard")
@@ -22,8 +21,8 @@ def dashboard():
     hoje = datetime.now()
     hoje_mmdd = hoje.strftime("%m-%d")
 
-    # Aniversariantes: próximos 30 dias
-    clientes_raw = [{"id": c.id, **c.to_dict()} for c in db.collection("clientes").where("status", "==", "ativo").stream()]
+    # 🔹 MODIFICADO: clientes isolados por empresa
+    clientes_raw = [{"id": c.id, **c.to_dict()} for c in colecao_empresa("clientes").where("status", "==", "ativo").stream()]
     aniversariantes = []
     for c in clientes_raw:
         nasc = c.get("data_nascimento", "")
@@ -31,7 +30,6 @@ def dashboard():
             continue
         try:
             nasc_dt = datetime.strptime(nasc, "%Y-%m-%d")
-            # Aniversário deste ano
             aniv_ano = nasc_dt.replace(year=hoje.year)
             if aniv_ano < hoje.replace(hour=0, minute=0, second=0, microsecond=0):
                 aniv_ano = aniv_ano.replace(year=hoje.year + 1)
@@ -48,14 +46,11 @@ def dashboard():
             continue
     aniversariantes.sort(key=lambda x: x["dias_para_aniversario"])
 
-    # Ranking de produtos vendidos
-    vendas_docs = [v.to_dict() for v in db.collection("vendas").where("status", "!=", "cancelado").stream()]
+    # 🔹 MODIFICADO: vendas isoladas por empresa
+    vendas_docs = [v.to_dict() for v in colecao_empresa("vendas").where("status", "!=", "cancelado").stream()]
     ranking_qtd = {}
     ranking_valor = {}
-    from datetime import date
-    hoje_date = date.today()
     for v in vendas_docs:
-        data_emissao = v.get("data_emissao", "")
         itens = v.get("itens", [])
         for item in itens:
             nome = item.get("nome", "Desconhecido")
@@ -72,15 +67,15 @@ def dashboard():
     ]
     ranking.sort(key=lambda x: x["quantidade"], reverse=True)
 
-    # Post-its: lidos do Firestore (coleção "postits")
-    postits = [{"id": p.id, **p.to_dict()} for p in db.collection("postits").order_by("ordem").stream()]
+    # 🔹 MODIFICADO: postits isolados por empresa
+    postits = [{"id": p.id, **p.to_dict()} for p in colecao_empresa("postits").order_by("ordem").stream()]
 
-    # Mensagem de aniversário configurada nos parâmetros
-    config_doc = db.collection("config").document("sistema").get()
+    # 🔹 MODIFICADO: config isolada por empresa
+    config_doc = colecao_empresa("config").document("sistema").get()
     config = config_doc.to_dict() if config_doc.exists else {}
     msg_aniversario = config.get("msg_aniversario", "Olá {nome}! 🎂 Feliz aniversário! Que seu dia seja especial! 🎉")
 
-    # Notas de atualização — exibir pop-up se o usuário ainda não viu esta versão
+    # Notas de atualização
     versao_atual = VERSAO_ATUAL
     user_doc = db.collection("usuarios").document(session["user_id"]).get()
     versao_vista = (user_doc.to_dict() or {}).get("versao_vista", "")

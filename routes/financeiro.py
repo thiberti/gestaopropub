@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from datetime import datetime
+from utils.empresa import colecao_empresa  # 🔹 NOVO
 
 from firebase import db
 from utils.auth import login_required
@@ -13,7 +14,7 @@ financeiro_bp = Blueprint(
 @login_required
 def financeiro():
     if request.method == "POST":
-        db.collection("financeiro").add(
+        colecao_empresa("financeiro").add({
             {
                 "descricao": request.form["descricao"],
                 "valor": float(request.form["valor"]),
@@ -27,7 +28,7 @@ def financeiro():
 
     hoje = datetime.now().strftime("%Y-%m-%d")
     lans = []
-    for l in db.collection("financeiro").stream():
+    for l in colecao_empresa("financeiro").stream():
         d = l.to_dict()
         d["id"] = l.id
         if (
@@ -55,14 +56,14 @@ def financeiro():
 @financeiro_bp.route("/pagar_financeiro/<id>")
 @login_required
 def pagar_financeiro(id):
-    db.collection("financeiro").document(id).update({"status": "pago"})
+    colecao_empresa("financeiro").document(id).update({"status": "pago"})
     return redirect(url_for("financeiro.financeiro"))
 
 
 @financeiro_bp.route("/editar_financeiro/<id>", methods=["POST"])
 @login_required
 def editar_financeiro(id):
-    db.collection("financeiro").document(id).update(
+    colecao_empresa("financeiro").document(id).update(
         {
             "descricao": request.form["descricao"],
             "valor": float(request.form["valor"]),
@@ -76,5 +77,5 @@ def editar_financeiro(id):
 @financeiro_bp.route("/cancelar_financeiro/<id>")
 @login_required
 def cancelar_financeiro(id):
-    db.collection("financeiro").document(id).update({"status": "cancelado"})
+    colecao_empresa("financeiro").document(id).update({"status": "cancelado"})
     return redirect(url_for("financeiro.financeiro"))
